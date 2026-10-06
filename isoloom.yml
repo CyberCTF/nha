@@ -7,61 +7,46 @@ name: nha
 networks:
   lab: { cidr: 192.168.56.0/24 }
 
+# Every box is GOAD's Windows Server 2019 image, 2 CPUs, WinRM set up by the box itself; said
+# once here. Sizes differ per machine.
+common:
+  resources: { cpus: 2, memory_mb: 3000 }
+  vm:
+    os: windows-server-2019
+    image: { vagrant: mayfly/windows_server2019 }
+    provision: [vagrant/ConfigureRemotingForAnsible.ps1]
+
+groups:
+  domain-controllers:
+    members: [dc01, dc02]
+
 machines:
   dc01:
     networks: { lab: 10 }
     services: [{ port: 53, name: dns }, { port: 88, name: kerberos }, { port: 389, name: ldap }, { port: 445, name: smb }]
-    resources: { cpus: 2, memory_mb: 3000 }
-    vm:
-      os: windows-server-2019
-      # GOAD's own box for this lab.
-      image:
-        vagrant: mayfly/windows_server2019
-      provision: [vagrant/ConfigureRemotingForAnsible.ps1]
+    vm: {}
 
   dc02:
     networks: { lab: 20 }
     services: [{ port: 53, name: dns }, { port: 88, name: kerberos }, { port: 389, name: ldap }, { port: 445, name: smb }]
-    resources: { cpus: 2, memory_mb: 3000 }
-    vm:
-      os: windows-server-2019
-      # GOAD's own box for this lab.
-      image:
-        vagrant: mayfly/windows_server2019
-      provision: [vagrant/ConfigureRemotingForAnsible.ps1]
+    vm: {}
 
   srv01:
     networks: { lab: 21 }
     services: [{ port: 445, name: smb }]
     resources: { cpus: 2, memory_mb: 5000 }
-    vm:
-      os: windows-server-2019
-      # GOAD's own box for this lab.
-      image:
-        vagrant: mayfly/windows_server2019
-      provision: [vagrant/ConfigureRemotingForAnsible.ps1]
+    vm: {}
 
   srv02:
     networks: { lab: 22 }
     services: [{ port: 445, name: smb }]
     resources: { cpus: 2, memory_mb: 5000 }
-    vm:
-      os: windows-server-2019
-      # GOAD's own box for this lab.
-      image:
-        vagrant: mayfly/windows_server2019
-      provision: [vagrant/ConfigureRemotingForAnsible.ps1]
+    vm: {}
 
   srv03:
     networks: { lab: 23 }
     services: [{ port: 445, name: smb }]
-    resources: { cpus: 2, memory_mb: 3000 }
-    vm:
-      os: windows-server-2019
-      # GOAD's own box for this lab.
-      image:
-        vagrant: mayfly/windows_server2019
-      provision: [vagrant/ConfigureRemotingForAnsible.ps1]
+    vm: {}
 
 provision:
   - ansible: ansible/nha.yml
@@ -70,3 +55,7 @@ provision:
       - ad/NHA/providers/isoloom/inventory
       - globalsettings.ini
     requirements: ansible/requirements_311.yml
+
+message: |
+  NHA is up: domain controllers at {{ machines.dc01.addresses.lab }} and {{ machines.dc02.addresses.lab }},
+  servers at {{ machines.srv01.addresses.lab }}, {{ machines.srv02.addresses.lab }} and {{ machines.srv03.addresses.lab }}.
