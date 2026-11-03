@@ -1,3 +1,12 @@
+# win_copy does not create the destination's parent directory, so a dest like
+# C:\setup\file.json fails on a host where C:\setup was never made (it exists on the SQL
+# member but not on the DCs). Create each dest's parent first; win_file is idempotent.
+- name: Ensure the destination directory exists
+  ansible.windows.win_file:
+    path: "{{ item.value.dest | win_dirname }}"
+    state: directory
+  with_dict: "{{ vulns_vars }}"
+
 - name: Copy a single file
   ansible.windows.win_copy:
     src: "../ad/{{domain_name}}/files/{{item.value.src}}"

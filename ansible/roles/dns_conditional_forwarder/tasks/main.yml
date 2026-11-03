@@ -1,3 +1,7 @@
+# The NAT adapter is disabled on the line before this role runs, so the box is still
+# re-settling its routes onto the lab network and the remote DC's DNS may not answer yet.
+# win_dns_zone validates the master server when it creates the forwarder, so retry until
+# that DC is reachable (same pattern as enable_nat_adapter).
 - name: Add dns server zone
   community.windows.win_dns_zone:
     name: "{{zone_name}}"
@@ -5,3 +9,7 @@
     replication: "{{replication}}"
     dns_servers:
       - "{{master_server}}"
+  register: forwarder_zone
+  until: forwarder_zone is not failed
+  retries: 10
+  delay: 30

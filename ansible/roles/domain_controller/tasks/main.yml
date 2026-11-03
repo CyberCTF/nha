@@ -2,9 +2,11 @@
 # - name: "disable interface {{nat_adapter}} before join domain"
 #   win_shell: netsh interface set interface "{{nat_adapter}}" disable
 
+# A disabled NAT adapter (left that way by a previous ad-trusts run) has no DnsClient object,
+# so filter it out: Set-DNSClient on it otherwise fails with "No MSFT_DNSClient objects found".
 - name: "disable the registration of the {{nat_adapter}} interface (NAT address) in DNS"
   ansible.windows.win_shell:
-    Get-NetAdapter '{{nat_adapter}}' | Set-DNSClient -RegisterThisConnectionsAddress $False
+    Get-NetAdapter '{{nat_adapter}}' | Where-Object Status -ne 'Disabled' | Set-DNSClient -RegisterThisConnectionsAddress $False
   when: two_adapters
 
 - name: Ensure that domain exists

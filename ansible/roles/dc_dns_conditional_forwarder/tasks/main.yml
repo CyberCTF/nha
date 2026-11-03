@@ -5,6 +5,10 @@
     replication: "{{replication}}"
     dns_servers:
       - "{{hostvars[dc].ansible_host}}"
+  register: dc_forwarder_zone
+  until: dc_forwarder_zone is not failed
+  retries: 10
+  delay: 30
   vars:
     ansible_become: yes
     ansible_become_method: runas
