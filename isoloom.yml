@@ -7,14 +7,13 @@ name: nha
 networks:
   lab: { cidr: 192.168.56.0/24 }
 
-# Every box is GOAD's Windows Server 2019 image, 2 CPUs, WinRM set up by the box itself; said
-# once here. Sizes differ per machine.
+# Every machine is a Windows Server 2019 box that only sets up WinRM itself; GOAD's Ansible does
+# the rest from the controller. Said once here; a machine's own value wins. Sizes differ per machine.
 common:
+  os: windows-server@2019
   resources: { cpus: 2, memory_mb: 3000 }
-  vm:
-    os: windows-server-2019
-    image: { vagrant: mayfly/windows_server2019 }
-    provision: [vagrant/ConfigureRemotingForAnsible.ps1]
+  app:
+    steps: [{ run: vagrant/ConfigureRemotingForAnsible.ps1 }]
 
 groups:
   domain-controllers:
@@ -23,30 +22,25 @@ groups:
 machines:
   dc01:
     networks: { lab: 10 }
-    services: [{ port: 53, name: dns }, { port: 88, name: kerberos }, { port: 389, name: ldap }, { port: 445, name: smb }]
-    vm: {}
+    ports: { dns: 53, kerberos: 88, ldap: 389, smb: 445 }
 
   dc02:
     networks: { lab: 20 }
-    services: [{ port: 53, name: dns }, { port: 88, name: kerberos }, { port: 389, name: ldap }, { port: 445, name: smb }]
-    vm: {}
+    ports: { dns: 53, kerberos: 88, ldap: 389, smb: 445 }
 
   srv01:
     networks: { lab: 21 }
-    services: [{ port: 445, name: smb }]
+    ports: { smb: 445 }
     resources: { cpus: 2, memory_mb: 5000 }
-    vm: {}
 
   srv02:
     networks: { lab: 22 }
-    services: [{ port: 445, name: smb }]
+    ports: { smb: 445 }
     resources: { cpus: 2, memory_mb: 5000 }
-    vm: {}
 
   srv03:
     networks: { lab: 23 }
-    services: [{ port: 445, name: smb }]
-    vm: {}
+    ports: { smb: 445 }
 
 provision:
   - ansible: ansible/nha.yml
